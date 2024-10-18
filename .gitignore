@@ -1,0 +1,7 @@
+.env
+.cache
+*.pdf
+*.png
+*.webm
+node_modules
+
