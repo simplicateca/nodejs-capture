@@ -1,6 +1,20 @@
 # NodeJS Screenshot Utility
 
-## Installation
+## Setup
+
+### Chromium Browser Installation
+
+https://ploi.io/documentation/server/how-to-install-puppeteer-on-ubuntu
+
+```bash
+sudo apt-get install chromium-browser
+
+sudo apt-get install libx11-xcb1 libxcomposite1 libasound2 libatk1.0-0 libatk-bridge2.0-0 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6
+```
+
+For **Ubuntu 24.04+** you may need to replace `libasound` with `libasound2t64`.
+
+### JavaScript Dependencies
 
 ```bash
 npm install
@@ -14,7 +28,21 @@ API_TOKEN=your_secret_token_here
 PORT=3000
 ```
 
-## Usage
+### Ploi Deployment Script
+
+```bash
+cd {SITE_DIRECTORY}
+cd ..
+rm -rf {SITE_DIRECTORY}
+git clone https://github.com/simplicateca/nodejs-capture {SITE_DIRECTORY}
+cd {SITE_DIRECTORY}
+echo -e "PORT=3000\nAPI_TOKEN=$(openssl rand -base64 24)" > .env
+npm ci
+
+echo "🚀 Application deployed!"
+```
+
+## How to Use
 
 ### Screenshot
 

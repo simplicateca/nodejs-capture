@@ -71,16 +71,18 @@ app.post('/screenshot', async (req, res) => {
 app.post('/screencast', async (req, res) => {
     try {
         const { browser, page } = await newBrowser(req.body);
-        const binary = await page.screencast(req.body.options?.screencast || { video: { width: 1024, height: 768, frameRate: 30 } } )
 
+        const recorder = await page.screencast(req.body.options?.screencast || { video: { width: 1024, height: 768, frameRate: 30 } } );
+
+        // const recorder = await page.screencast( {path: '/home/steve/Desktop/recording.webm'} );
         await new Promise(resolve => setTimeout(resolve, 2000));
-
-        await page.screencast({ stop: true });
-        await browser.close();
+        await recorder.stop();
+        browser.close();
 
         res.set('Content-Type', 'video/webm');
         res.set('Content-Disposition', 'attachment; filename="screencast.webm"');
-        res.send(Buffer.from(binary));
+        res.send(Buffer.from(recorder));
+
     } catch( error ) {
         console.error('Error recording screencast:', error);
         res.status(500).json({ error: 'Failed to record screencast' });
