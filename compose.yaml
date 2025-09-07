@@ -1,0 +1,16 @@
+services;
+
+  # Puppeteer (Headless Chrome for screenshots, PDFs, etc)
+  # ----------------------------------------------------------------------- #
+  puppeteer:
+    image: ghcr.io/puppeteer/puppeteer:23.6.0
+    volumes:
+      - ./etc/nodejs/capture:/usr/src/app
+    working_dir: /usr/src/app
+    environment:
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+    command: >
+      bash -c "
+        [ ! -f package-lock.json ] && npm install;
+        [ ! -d node_modules ] && npm ci;
+        npm run dev"
