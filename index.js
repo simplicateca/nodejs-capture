@@ -1,44 +1,19 @@
 const dotenv  = require('dotenv');
-const express = require('express');
-const cors    = require('cors');
-
-const { verify_url } = require("./lib/utils");
-const { prepare_file } = require("./lib/files");
-const { capture_screenshot, capture_pdf, capture_recording } = require("./lib/capture");
-const { upload2minio } = require("./lib/storage");
-
 dotenv.config();
 
-const SERVER_PORT = process.env.SERVER_PORT ?? 3000;
-const BEARER_TOKEN = process.env.BEARER_TOKEN;
-if (!BEARER_TOKEN) {
-    console.error('Error: BEARER_TOKEN is not set in the .env file.');
-    process.exit(1);
-}
+const { basic_setup } = require("./lib/express");
+const { verify_url, prepare_file, stream_response } = require("./lib/utils");
+const { capture_screenshot, capture_pdf, capture_recording } = require("./lib/capture");
+const { video_optimize, video_looping, video_mp3 }  = require("./lib/ffmpeg");
 
-const app = express();
-app.use(express.json());
-app.use(cors())
-app.options(/.*/, cors());
+const app = basic_setup();
 
 
-// Test Header Auth Token against .env
-app.use((req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({});
-    }
+// -------------------------------------------------------------------------------
+// Puppeteer Capture Endpoints
+// -------------------------------------------------------------------------------
 
-    const token = authHeader.split(' ')[1];
-    if (token !== BEARER_TOKEN) {
-        return res.status(403).json({});
-    }
-
-    next();
-});
-
-
-// Screenshot Endpoint
+// Webpage Screenshot
 app.post('/screenshot', async (req, res) => {
     const { url, proxy, browser, config, upload } = req.body;
     console.log( upload )
@@ -53,22 +28,7 @@ app.post('/screenshot', async (req, res) => {
 });
 
 
-// Recording Endpoint
-app.post('/recording', async (req, res) => {
-    const { url, proxy, browser, config, upload } = req.body;
-    if (proxy) { return res.status(400).json({ error: 'Can not proxy recording requests' }); }
-    try {
-        const file = prepare_file( upload, { prefix: 'webclip-', ext: 'webm' });
-        const blob = await capture_recording( verify_url(url), { browser, config } );
-        return stream_response( res, { file, blob } );
-    } catch (err) {
-        console.error('/recording:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-
-// PDF Endpoint
+// Webpage to PDF
 app.post('/pdf', async (req, res) => {
     const { url, proxy, browser, config, upload } = req.body;
     try {
@@ -84,20 +44,87 @@ app.post('/pdf', async (req, res) => {
 });
 
 
-// Start the Express.js server
-app.listen(SERVER_PORT, () => {
-    console.log(`Server is running on http://localhost:${SERVER_PORT}`);
+// Webpage Screen Recording
+app.post('/recording', async (req, res) => {
+    const { url, proxy, browser, config, upload } = req.body;
+    if (proxy) { return res.status(400).json({ error: 'Can not proxy recording requests' }); }
+    try {
+        const file = prepare_file( upload, { prefix: 'webclip-', ext: 'webm' });
+        const blob = await capture_recording( verify_url(url), { browser, config } );
+        return stream_response( res, { file, blob } );
+    } catch (err) {
+        console.error('/recording:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 
-// Common Response Handler
-const stream_response = async (res, data) => {
-    if (process.env.MINIO_ENDPOINT && data?.file?.bucket && data?.blob) {
-        const upload = await upload2minio(data.file, data.blob);
-        return res.json(upload);
+
+// -------------------------------------------------------------------------------
+// FFMPEG Video Processing Endpoints
+// -------------------------------------------------------------------------------
+
+// Optimize video for web playback
+app.post("/optimize-video", async (req, res) => {
+    const { url, upload } = req.body;
+    try {
+        const file = prepare_file( upload, { ext: 'mp4' } );
+        const blob = await video_optimize( verify_url(url) );
+        return stream_response( res, { file, blob } );
+    } catch (err) {
+        console.error('/optimize-video:', err);
+        res.status(500).json({ error: err.message });
     }
-    res.set("Content-Type", data.file.type);
-    res.set("Content-Length", data.blob.length);
-    res.set("Content-Disposition", `attachment; filename="${data.file.name}"`);
-    res.end(Buffer.from(data.blob, 'binary'));
-};
+});
+
+
+// Optimize video for silent web playback
+app.post("/optimize-silent-video", async (req, res) => {
+    const { url, upload } = req.body;
+    try {
+        const file = prepare_file( upload, { ext: 'mp4' } );
+        const blob = await video_optimize( verify_url(url), { audio: false } );
+        return stream_response( res, { file, blob } );
+    } catch (err) {
+        console.error('/optimize-silent-video:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+// Optimize video for background (silent, looping) web playback
+app.post("/optimize-looping-video", async (req, res) => {
+    const { url, upload } = req.body;
+    try {
+        const file = prepare_file( upload, { ext: 'mp4' } );
+        const blob = await video_looping( verify_url(url) );
+        return stream_response( res, { file, blob } );
+    } catch (err) {
+        console.error('/optimize-looping-video:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+// Extract audio from video (video to mp3)
+app.post("/video-to-mp3", async (req, res) => {
+    const { url, upload } = req.body;
+    try {
+        const file = prepare_file( upload, { ext: 'mp3' } );
+        const blob = await video_mp3( verify_url(url) );
+        return stream_response( res, { file, blob } );
+    } catch (err) {
+        console.error('/video-to-mp3:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+// -------------------------------------------------------------------------------
+
+
+// -------------------------------------------------------------------------------
+// Start the Express.js server
+// -------------------------------------------------------------------------------
+const PORT = process.env.SERVER_PORT ?? 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
