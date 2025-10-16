@@ -41,6 +41,7 @@ app.use((req, res, next) => {
 // Screenshot Endpoint
 app.post('/screenshot', async (req, res) => {
     const { url, proxy, browser, config, upload } = req.body;
+    console.log( upload )
     try {
         const file = prepare_file( upload, { prefix: 'screenshot-', ext: 'png' });
         const blob = await capture_screenshot( verify_url(url, proxy), { browser, config } );
@@ -71,10 +72,10 @@ app.post('/recording', async (req, res) => {
 app.post('/pdf', async (req, res) => {
     const { url, proxy, browser, config, upload } = req.body;
     try {
-        const portrait = { viewport: { width: 1080, height: 1920 }, ...(browser ?? {}) };
+        const params = browser ?? { viewport: { width: 1080, height: 1920 } };
 
         const file = prepare_file( upload, { prefix: 'webpage-', ext: 'pdf' });
-        const blob = await capture_pdf( verify_url(url, proxy), { portrait, config } );
+        const blob = await capture_pdf( verify_url(url, proxy), { params, config } );
         return stream_response( res, { file, blob } );
     } catch (err) {
         console.error('/pdf:', err);
@@ -96,6 +97,7 @@ const stream_response = async (res, data) => {
         return res.json(upload);
     }
     res.set("Content-Type", data.file.type);
+    res.set("Content-Length", data.blob.length);
     res.set("Content-Disposition", `attachment; filename="${data.file.name}"`);
-    res.send(data.blob);
+    res.end(Buffer.from(data.blob, 'binary'));
 };
