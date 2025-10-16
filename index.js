@@ -19,7 +19,7 @@ if (!BEARER_TOKEN) {
 const app = express();
 app.use(express.json());
 app.use(cors())
-app.options('*', cors());
+app.options(/.*/, cors());
 
 
 // Test Header Auth Token against .env
@@ -71,8 +71,10 @@ app.post('/recording', async (req, res) => {
 app.post('/pdf', async (req, res) => {
     const { url, proxy, browser, config, upload } = req.body;
     try {
+        const portrait = { viewport: { width: 1080, height: 1920 }, ...(browser ?? {}) };
+
         const file = prepare_file( upload, { prefix: 'webpage-', ext: 'pdf' });
-        const blob = await capture_pdf( verify_url(url, proxy), { browser, config } );
+        const blob = await capture_pdf( verify_url(url, proxy), { portrait, config } );
         return stream_response( res, { file, blob } );
     } catch (err) {
         console.error('/pdf:', err);
