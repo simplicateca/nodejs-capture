@@ -16,10 +16,9 @@ const app = basic_setup();
 // Webpage Screenshot
 app.post('/screenshot', async (req, res) => {
     const { url, proxy, browser, config, upload } = req.body;
-    console.log( upload )
     try {
         const file = prepare_file( upload, { prefix: 'screenshot-', ext: 'png' });
-        const blob = await capture_screenshot( verify_url(url, proxy), { browser, config } );
+        const blob = await capture_screenshot( verify_url(url, proxy), { browser, options: config } );
         return stream_response( res, { file, blob } );
     } catch (err) {
         console.error('/screenshot:', err);
@@ -35,7 +34,7 @@ app.post('/pdf', async (req, res) => {
         const params = browser ?? { viewport: { width: 1080, height: 1920 } };
 
         const file = prepare_file( upload, { prefix: 'webpage-', ext: 'pdf' });
-        const blob = await capture_pdf( verify_url(url, proxy), { params, config } );
+        const blob = await capture_pdf( verify_url(url, proxy), { browser: params, options: config } );
         return stream_response( res, { file, blob } );
     } catch (err) {
         console.error('/pdf:', err);
@@ -50,7 +49,7 @@ app.post('/recording', async (req, res) => {
     if (proxy) { return res.status(400).json({ error: 'Can not proxy recording requests' }); }
     try {
         const file = prepare_file( upload, { prefix: 'webclip-', ext: 'webm' });
-        const blob = await capture_recording( verify_url(url), { browser, config } );
+        const blob = await capture_recording( verify_url(url), { browser, options: config } );
         return stream_response( res, { file, blob } );
     } catch (err) {
         console.error('/recording:', err);
