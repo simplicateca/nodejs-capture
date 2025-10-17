@@ -141,4 +141,5 @@ const server = app.listen( process.env.SERVER_PORT ?? 3000, () => {
     console.log(`Server is running on http://localhost:${server.address().port}.`);
 });
 
-server.setTimeout( process.env.SERVER_TIMEOUT ?? 10 * 60 * 1000 );
+server.timeout = process.env.SERVER_TIMEOUT ?? 10 * 60 * 1000;        // 5 min
+server.headersTimeout = ( process.env.SERVER_TIMEOUT ?? 10 * 60 * 1000 ) + 1000; // 5 min + buffer
