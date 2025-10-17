@@ -4,7 +4,7 @@ dotenv.config();
 const { basic_setup } = require("./lib/express");
 const { verify_url, prepare_file, stream_response } = require("./lib/utils");
 const { capture_screenshot, capture_pdf, capture_recording } = require("./lib/capture");
-const { video_optimize, video_looping, video_mp3 }  = require("./lib/ffmpeg");
+const { video_optimize, video_looping, video_mp3, video_webm}  = require("./lib/ffmpeg");
 
 const app = basic_setup();
 
@@ -101,6 +101,20 @@ app.post("/optimize-looping-video", async (req, res) => {
         return stream_response( res, { file, blob } );
     } catch (err) {
         console.error('/optimize-looping-video:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+// Convert video to webm format
+app.post("/video-to-webm", async (req, res) => {
+    const { url, upload } = req.body;
+    try {
+        const file = prepare_file( upload, { ext: 'webm' } );
+        const blob = await video_webm( verify_url(url) );
+        return stream_response( res, { file, blob } );
+    } catch (err) {
+        console.error('/video-to-webm:', err);
         res.status(500).json({ error: err.message });
     }
 });
