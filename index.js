@@ -138,7 +138,8 @@ app.post("/video-to-mp3", async (req, res) => {
 // -------------------------------------------------------------------------------
 // Start the Express.js server
 // -------------------------------------------------------------------------------
-const PORT = process.env.SERVER_PORT ?? 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+const server = app.listen( process.env.SERVER_PORT ?? 3000, () => {
+    console.log(`Server is running on http://localhost:${server.address().port}.`);
 });
+
+server.setTimeout( process.env.SERVER_TIMEOUT ?? 10 * 60 * 1000 );
