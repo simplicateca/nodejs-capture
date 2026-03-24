@@ -16,6 +16,7 @@ ensure_env() {
         cat > .env <<EOF
 CAPTURE_PORT=3000
 CAPTURE_TOKEN=$(openssl rand -base64 24)
+FFMPEG_PATH=/usr/bin/ffmpeg
 EOF
     fi
 }
