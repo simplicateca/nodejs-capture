@@ -14,8 +14,8 @@ ensure_env() {
     if [ ! -f .env ]; then
         echo "Creating .env"
         cat > .env <<EOF
-SERVER_PORT=3000
-BEARER_TOKEN=$(openssl rand -base64 24)
+CAPTURE_PORT=3000
+CAPTURE_TOKEN=$(openssl rand -base64 24)
 EOF
     fi
 }

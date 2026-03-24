@@ -24,8 +24,8 @@ node index.js
 ### Environment Variables (.env file)
 
 ```env
-BEARER_TOKEN=your_secret_token_here
-SERVER_PORT=3000
+CAPTURE_TOKEN=your_secret_token_here
+CAPTURE_PORT=3000
 ```
 
 ### Ploi Deployment Script
@@ -36,7 +36,7 @@ git clone https://github.com/simplicateca/nodejs-capture {WEB_DIRECTORY}
 cd {WEB_DIRECTORY}
 npm install
 cd {SITE_DIRECTORY}
-echo -e "SERVER_PORT=3000\nBEARER_TOKEN=$(openssl rand -base64 24)" > .env
+echo -e "CAPTURE_PORT=3000\nCAPTURE_TOKEN=$(openssl rand -base64 24)" > .env
 pm2 start public/index.js --name nodejs-capture --update-env
 
 echo "🚀 Application deployed!"
